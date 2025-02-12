@@ -69,7 +69,7 @@ pub fn build(b: *std.Build) !void {
 
     unit_test.addCSourceFiles(.{
         .root = b.path("test"),
-        .files = &.{ "main.c", "munit.c" },
+        .files = &.{ "test_main.c", "munit.c" },
     });
 
     unit_test.addIncludePath(include_path);
