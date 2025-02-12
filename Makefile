@@ -19,8 +19,8 @@ OBJECT_FILES = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC_FILES))
 
 # test
 TEST_SRC_FILES = $(wildcard $(TEST_DIR)/*.c)
-TEST_OBJECT_FILES = $(patsubst $(TEST_DIR)/%.c, $(OBJ_DIR)/%.o, $(TEST_SRC_FILES))
-TEST_OBJECT_FILES += $(filter-out $(OBJ_DIR)/main.o, $(OBJ_FILES))
+TEST_OBJECT_FILES := $(patsubst $(TEST_DIR)/%.c, $(OBJ_DIR)/%.o, $(TEST_SRC_FILES))
+TEST_OBJECT_FILES += $(filter-out $(OBJ_DIR)/main.o, $(OBJECT_FILES))
 
 # Allowing parallel compiling
 MAKEFLAGS+=-j8
