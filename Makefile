@@ -1,6 +1,7 @@
 CC = gcc
-CF = -g -Iinclude -m64 $(VARS)
-LF = -lkernel32 -luser32 -lonecore $(shell sdl2-config --libs)
+CF = -g -O3 -Iinclude -m64 -w $(VARS)
+LF = -lkernel32 -luser32 -lonecore -ldwmapi -lgdi32 -mwindows
+SDL_CONFIG = $(shell sdl2-config --libs)
 
 SRC_DIR = src
 BIN_DIR = bin
@@ -47,7 +48,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 
 $(TARGET): $(OBJECT_FILES) | $(BIN_DIR)
 	@echo [*] Linking all togither
-	@$(CC) -o $@ $^ $(LF)
+	@$(CC) -o $@ $^ $(LF) $(SDL_CONFIG)
 
 
 $(OBJ_DIR)/%.o: $(TEST_DIR)/%.c | $(OBJ_DIR)

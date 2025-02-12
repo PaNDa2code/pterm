@@ -30,12 +30,15 @@ pub fn build(b: *std.Build) !void {
         .files = &.{
             "create_process.c",
             "ring_buffer.c",
+            "dark_mode.c",
         },
         .root = src_path,
     });
     // Link libraries
     pterm_lib.linkSystemLibrary("kernel32");
     pterm_lib.linkSystemLibrary("user32");
+    pterm_lib.linkSystemLibrary("dwmapi");
+    pterm_lib.linkSystemLibrary("gdi32");
 
     const sdl_deb = b.dependency("SDL", .{
         .optimize = optimize,
@@ -77,7 +80,11 @@ pub fn build(b: *std.Build) !void {
 
     unit_test.addCSourceFiles(.{
         .root = b.path("test"),
-        .files = &.{ "test_main.c", "munit.c" },
+        .files = &.{
+            "test_main.c",
+            "munit.c",
+            "test_ring_buffer.c",
+        },
     });
 
     unit_test.addIncludePath(include_path);
