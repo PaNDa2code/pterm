@@ -1,2 +1,4 @@
 obj/
 bin/
+.zig-cache/
+zig-out/
