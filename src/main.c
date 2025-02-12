@@ -5,17 +5,20 @@
 #include <SDL3/SDL_video.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include <stdio.h>
+#include <string.h>
 #include <windows.h>
 #include <stdbool.h>
+
+#include "create_process.h"
+#include "ring_buffer.h"
 
 // Enable dark mode for window
 void EnableDarkMode(HWND hwnd);
 
 #define TERMINAL_WIDTH 60
 #define TERMINAL_HEIGHT 30
-#define FONT_HEIGHT 24
-#define FONT_WEDTH 20
-#define FONT_SIZE FONT_HEIGHT
+#define FONT_SIZE 24
 #define DARK_MODE true
 #define TRANSPARANT false
 
@@ -28,22 +31,14 @@ typedef struct
 
 TTF_Font *font = NULL;
 SDL_Texture *glyph_atlas[128];
-TerminalCell terminal[TERMINAL_HEIGHT][TERMINAL_WIDTH];
+RING_BUFFER stdoutRingBuffer = {};
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 int glyph_width = 0;
 
 void InitializeTerminal()
 {
-  for (int y = 0; y < TERMINAL_HEIGHT; y++)
-  {
-    for (int x = 0; x < TERMINAL_WIDTH; x++)
-    {
-      terminal[y][x].character = ' ';
-      terminal[y][x].fg_color = (SDL_Color){255, 255, 255, 255};
-      terminal[y][x].bg_color = (SDL_Color){0, 0, 0, 255};
-    }
-  }
+  CreateRingBuffer(&stdoutRingBuffer, 64 KB);
 }
 
 bool CreateGlyphAtlas()
@@ -75,22 +70,22 @@ void RenderTerminal()
 {
   SDL_RenderClear(renderer);
 
-  for (int y = 0; y < TERMINAL_HEIGHT; y++)
+  size_t ReadOffset = stdoutRingBuffer.ReadOffset;
+  size_t WriteOffset = stdoutRingBuffer.WriteOffset;
+  size_t BufferSize = stdoutRingBuffer.BufferSize;
+
+  size_t Length = (WriteOffset >= ReadOffset) ? (WriteOffset - ReadOffset) : BufferSize;
+
+  unsigned char *BufferStart = stdoutRingBuffer.BaseBuffer + ReadOffset;
+
+  for (size_t i = 0; i < Length; i++)
   {
-    for (int x = 0; x < TERMINAL_WIDTH; x++)
-    {
-      TerminalCell cell = terminal[y][x];
+    size_t x = i % TERMINAL_WIDTH;
+    size_t y = i / TERMINAL_WIDTH;
 
-      SDL_FRect bgRect = {x * FONT_SIZE, y * FONT_SIZE, FONT_SIZE, FONT_SIZE};
-      SDL_SetRenderDrawColor(renderer, cell.bg_color.r, cell.bg_color.g, cell.bg_color.b, cell.bg_color.a);
-      SDL_RenderFillRect(renderer, &bgRect);
-
-      if (cell.character >= 0 && cell.character < 128 && glyph_atlas[(int)cell.character])
-      {
-        SDL_FRect dstRect = {x * FONT_SIZE, y * FONT_SIZE, FONT_WEDTH, FONT_HEIGHT};
-        SDL_RenderTexture(renderer, glyph_atlas[(int)cell.character], NULL, &dstRect);
-      }
-    }
+    SDL_Texture *glyph = glyph_atlas[BufferStart[i]];
+    SDL_FRect disRect = {x * FONT_SIZE, y * FONT_SIZE, FONT_SIZE, FONT_SIZE};
+    SDL_RenderTexture(renderer, glyph, NULL, &disRect);
   }
 
   SDL_RenderPresent(renderer);
@@ -108,9 +103,9 @@ int main(int argc, char **argv)
   if (!TTF_Init())
     return -1;
 
-  if (!SDL_CreateWindowAndRenderer(TEXT("Pterminal"),
-                                   TERMINAL_WIDTH * FONT_WEDTH,
-                                   TERMINAL_HEIGHT * FONT_HEIGHT,
+  if (!SDL_CreateWindowAndRenderer(TEXT("pterminal"),
+                                   TERMINAL_WIDTH * FONT_SIZE,
+                                   TERMINAL_HEIGHT * FONT_SIZE,
                                    SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE,
                                    &window,
                                    &renderer))
@@ -147,6 +142,11 @@ int main(int argc, char **argv)
   font = TTF_OpenFont("C:/Windows/Fonts/CascadiaCode.ttf", FONT_SIZE);
   InitializeTerminal();
 
+  HANDLE hRead, hWrite, hProcess;
+  HPCON hPC;
+  SpawnChildProcess(L"C:\\windows\\system32\\cmd.exe", &hProcess, &hWrite, &hRead, &hPC);
+  CreateRingBuffer(&stdoutRingBuffer, 64 KB);
+
   if (!CreateGlyphAtlas())
   {
     SDL_DestroyRenderer(renderer);
@@ -166,12 +166,10 @@ int main(int argc, char **argv)
       if (event.type == SDL_EVENT_QUIT)
         quit = true;
     }
-    terminal[0][0].character = 'H';
-    terminal[0][1].character = 'i';
-    terminal[0][2].character = '!';
     SDL_SetRenderDrawColor(renderer, 32, 32, 32, 255);
-
     SDL_RenderClear(renderer);
+
+    RingBufferHandleRead(&stdoutRingBuffer, hRead);
     RenderTerminal();
 
     SDL_RenderPresent(renderer);
@@ -183,6 +181,7 @@ int main(int argc, char **argv)
       SDL_DestroyTexture(glyph_atlas[i]);
     }
   }
+  FreeRingBuffer(&stdoutRingBuffer);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   TTF_CloseFont(font);

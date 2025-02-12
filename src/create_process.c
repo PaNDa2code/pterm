@@ -86,7 +86,7 @@ BOOL CustomCreatePipe(PHANDLE phRead, PHANDLE phWrite, PCWSTR PipeName)
   SECURITY_ATTRIBUTES sAttr = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
   HANDLE hRead = CreateNamedPipeW(PipeName,
                                   PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
-                                  PIPE_TYPE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
+                                  PIPE_TYPE_BYTE | PIPE_NOWAIT | PIPE_REJECT_REMOTE_CLIENTS,
                                   1,
                                   0,
                                   PIPE_BUFFER_SIZE,
