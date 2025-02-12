@@ -23,9 +23,6 @@ pub fn build(b: *std.Build) !void {
         .link_libc = true,
     });
 
-    pterm_lib.linkSystemLibrary("kernel32");
-    pterm_lib.linkSystemLibrary("user32");
-    pterm_lib.linkSystemLibrary("onecore");
     // Include directory
     pterm_lib.addIncludePath(include_path);
     // C source files
@@ -62,4 +59,28 @@ pub fn build(b: *std.Build) !void {
     const run_step = b.step("run", "run pterm executable");
 
     run_step.dependOn(&exe_run.step);
+
+    const unit_test = b.addExecutable(.{
+        .name = "unit test",
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+
+    unit_test.addCSourceFiles(.{
+        .root = b.path("test"),
+        .files = &.{ "main.c", "munit.c" },
+    });
+
+    unit_test.addIncludePath(include_path);
+
+    if (target.result.abi == .msvc) {
+        // MSVC POSIX runtime library for windows
+        unit_test.linkSystemLibrary("msvcrt");
+        unit_test.linkSystemLibrary("oldnames");
+    }
+    unit_test.linkLibrary(pterm_lib);
+    const test_run = b.addRunArtifact(unit_test);
+    const test_step = b.step("test", "run unit tests");
+    test_step.dependOn(&test_run.step);
 }
