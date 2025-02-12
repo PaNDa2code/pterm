@@ -6,4 +6,4 @@
 
 #include <windows.h>
 
-void SpawnChildProcess(LPCSTR lpAppName, PHANDLE phProcess, PHANDLE phStdinWrite, PHANDLE phStdoutRead, HANDLE *phPC);
+void SpawnChildProcess(LPCWSTR lpAppName, PHANDLE phProcess, PHANDLE phStdinWrite, PHANDLE phStdoutRead, HANDLE *phPC);

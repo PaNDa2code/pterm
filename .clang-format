@@ -9,3 +9,4 @@ AlignAfterOpenBracket: Align
 IndentWidth: 2
 TabWidth: 2
 UseTab: Never
+AllowAllArgumentsOnNextLine: false  # Forces line breaks for each argument
