@@ -1,6 +1,4 @@
 CompileFlags:
-  Compiler: clang-cl
+  Compiler: gcc
   Add:
     - -I..\include
-    - -I$()
-    - -m64

@@ -6,7 +6,9 @@
 #define MB *(1024 KB)
 #define GB *(1024 MB)
 
-typedef struct _ring_buffer { PVOID BaseBuffer;
+typedef struct _ring_buffer
+{
+  PVOID BaseBuffer;
   SIZE_T BufferSize;
   SIZE_T ReadOffset;
   SIZE_T WriteOffset;
@@ -15,5 +17,6 @@ typedef struct _ring_buffer { PVOID BaseBuffer;
 BOOL CreateRingBuffer(PRING_BUFFER pRingBuffer, SIZE_T Size);
 void FreeRingBuffer(PRING_BUFFER pRingBuffer);
 BOOL RingBufferHandleRead(PRING_BUFFER pRingBuffer, HANDLE hRead);
+BOOL RingBufferWrite(PRING_BUFFER pRingBuffer, PVOID source, SIZE_T size);
 
 #define RINGBUF_READ_PTR(pRingBuffer) ((pRingBuffer)->BaseBuffer + (pRingBuffer)->ReadOffset)
