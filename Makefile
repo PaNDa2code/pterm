@@ -1,5 +1,5 @@
 CC = gcc
-CF = -g -Iinclude -m64 -D_WIN32_WINNT=0x0A00
+CF = -g -Iinclude -m64
 LF = -lkernel32 -luser32 -lonecore
 
 SRC_DIR = src
@@ -11,6 +11,7 @@ TARGET = $(BIN_DIR)\pterm.exe
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
 OBJECT_FILES = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC_FILES))
 
+# Allowing parallel compiling
 MAKEFLAGS+=-j8
 
 all: $(BIN_DIR) $(OBJ_DIR) $(TARGET)
