@@ -2,3 +2,4 @@ CompileFlags:
   Compiler: gcc
   Add:
     - -I..\include
+    - -IC:\msys64\usr\local\include

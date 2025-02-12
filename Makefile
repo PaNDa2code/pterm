@@ -1,7 +1,16 @@
 CC = gcc
-CF = -g -O3 -Iinclude -m64 -w $(VARS)
-LF = -lkernel32 -luser32 -lonecore -ldwmapi -lgdi32 -mwindows
-SDL_CONFIG = $(shell sdl2-config --libs)
+CF = -g -O3 -Iinclude -IC:/msys64/usr/local/include/ -m64 -w $(VARS)
+LF = 	-LC:/msys64/usr/local/bin \
+			-mwindows \
+			-lkernel32 \
+			-luser32 \
+			-lonecore \
+			-ldwmapi \
+			-lgdi32 \
+			-lSDL3 \
+			-lSDL3_ttf
+
+TEST_LF = -lkernel32 -luser32 -lonecore -ldwmapi
 
 SRC_DIR = src
 BIN_DIR = bin
@@ -57,7 +66,7 @@ $(OBJ_DIR)/%.o: $(TEST_DIR)/%.c | $(OBJ_DIR)
 
 $(TEST_TARGET): $(TEST_OBJECT_FILES) | $(BIN_DIR)
 	@echo [*] Linking all togither
-	@$(CC) -o $@ $^ $(LF)
+	@$(CC) -o $@ $^ $(TEST_LF)
 
 clean:
 	rm -rf $(OBJ_DIR)/* $(TARGET) $(TEST_TARGET) .zig-cache zig-out
