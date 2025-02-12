@@ -4,24 +4,39 @@
 
 int main()
 {
+  BOOL result;
   DWORD BytesRead = 0;
   CHAR buffer[1024];
-  HANDLE hStdinWrite, hStdoutRead, hProcess;
-  HANDLE hPC;
-  SpawnChildProcess(L"C:\\windows\\system32\\cmd.exe", &hProcess, &hStdinWrite, &hStdoutRead, &hPC);
-  PCHAR command = "echo HelloWorld!\r\n";
-  WriteFile(hStdinWrite, command, strlen(command), NULL, NULL);
-  Sleep(1000);
-  ReadFile(hStdoutRead, buffer, sizeof(buffer), &BytesRead, NULL);
-  printf("Output: %.*s\n", (int)BytesRead, buffer);
-  WriteFile(hStdinWrite, command, strlen(command), NULL, NULL);
-  Sleep(1000);
-  ReadFile(hStdoutRead, buffer, sizeof(buffer), &BytesRead, NULL);
-  printf("Output: %.*s\n", (int)BytesRead, buffer);
+  OVERLAPPED ol = {};
 
-  ReadFile(hStdoutRead, buffer, sizeof(buffer), &BytesRead, NULL);
-  printf("Output: %.*s\n", (int)BytesRead, buffer);
+  HANDLE hStdinWrite, hStdoutRead, hProcess;
+  HPCON hPC;
+
+  SpawnChildProcess(L"C:\\windows\\system32\\cmd.exe", &hProcess, &hStdinWrite, &hStdoutRead, &hPC);
+
+  ol.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+
+  PCHAR command = "dir\r\n";
+
+  result = WriteFile(hStdinWrite, command, strlen(command), NULL, &ol);
+
+  WaitForSingleObject(ol.hEvent, INFINITE);
+  GetOverlappedResult(hStdinWrite, &ol, &BytesRead, FALSE);
+
+  ResetEvent(ol.hEvent);
+
+  for (int i = 0; i < 2; i++)
+  {
+    ReadFile(hStdoutRead, buffer, sizeof(buffer), &BytesRead, &ol);
+    WaitForSingleObject(ol.hEvent, INFINITE);
+    GetOverlappedResult(hStdoutRead, &ol, &BytesRead, FALSE);
+    ResetEvent(ol.hEvent);
+    printf("%.*s -------->%d\n", (int)BytesRead, buffer, i);
+  }
+
+  printf("\n------------ END -------------\n");
 
   ClosePseudoConsole(hPC);
+  CloseHandle(ol.hEvent);
   return 0;
 }

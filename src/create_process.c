@@ -1,8 +1,10 @@
-#undef NTDDI_VERSION
-#define NTDDI_VERSION 0x0A000006 // NTDDI_WIN10_RS5
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0A00 // _WIN32_WINNT_WIN10
-//
+/*
+ * @Author: PaNDa2code
+ * @Email:  moaaz0688@gmail.com
+ * @Date:   2025-02-05 07:06
+ * @Description: Code for initializing the child shell program process.
+ */
+
 #include <windows.h>
 #include <wincon.h>
 #include <assert.h>
@@ -17,8 +19,9 @@
 
 BOOL CustomCreatePipe(PHANDLE phRead, PHANDLE phWrite, PCWSTR PipeName);
 
-// Create a child process with async io pipes handles
-void SpawnChildProcess(LPCWSTR lpAppName, PHANDLE phProcess, PHANDLE phStdinWrite, PHANDLE phStdoutRead, HANDLE *phPC)
+// Create a child process with async io pipes handles.
+// TODO: error handling
+void SpawnChildProcess(LPCWSTR lpAppName, PHANDLE phProcess, PHANDLE phStdinWrite, PHANDLE phStdoutRead, HPCON *phPC)
 {
   HANDLE hStdinRead, hStdinWrite;
   HANDLE hStdoutRead, hStdoutWrite;
@@ -72,9 +75,17 @@ void SpawnChildProcess(LPCWSTR lpAppName, PHANDLE phProcess, PHANDLE phStdinWrit
 
 BOOL CustomCreatePipe(PHANDLE phRead, PHANDLE phWrite, PCWSTR PipeName)
 {
+  if (!phRead || !phWrite || !PipeName)
+    return FALSE;
+
+  const PCWSTR PipeNamePrefix = L"\\\\.\\pipe\\";
+
+  if (wcsncmp(PipeName, PipeNamePrefix, wcslen(PipeNamePrefix)))
+    return FALSE;
+
   SECURITY_ATTRIBUTES sAttr = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
   HANDLE hRead = CreateNamedPipeW(PipeName,
-                                  PIPE_ACCESS_INBOUND,
+                                  PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
                                   PIPE_TYPE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
                                   1,
                                   0,

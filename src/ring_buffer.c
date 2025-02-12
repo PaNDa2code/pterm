@@ -1,4 +1,10 @@
-// https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc2#examples
+/*
+ * @Author: PaNDa2code
+ * @Email: moaaz0688@gmail.com
+ * @Date: 2025-02-05
+ * @Description: Circular buffer implementation using virtual memory manipulation (based on Windows documentation)
+ * @Reference: https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc2#examples
+ */
 
 #include <windows.h>
 #include <stdio.h>
@@ -74,7 +80,7 @@ BOOL CreateRingBuffer(PRING_BUFFER pRingBuffer, SIZE_T Size)
 
   pRingBuffer->BaseBuffer = view1;
   pRingBuffer->BufferSize = Size;
-  pRingBuffer->pSecondView = view2;
+  pRingBuffer->pSecondaryView = view2;
 
   placeholder2 = NULL;
   view1 = NULL;
@@ -83,31 +89,38 @@ BOOL CreateRingBuffer(PRING_BUFFER pRingBuffer, SIZE_T Size)
   result = TRUE;
 
 Exit:
-
   if (section != NULL)
-  {
     CloseHandle(section);
-  }
 
   if (placeholder1 != NULL)
-  {
     VirtualFree(placeholder1, 0, MEM_RELEASE);
-  }
 
   if (placeholder2 != NULL)
-  {
     VirtualFree(placeholder2, 0, MEM_RELEASE);
-  }
 
   if (view1 != NULL)
-  {
     UnmapViewOfFileEx(view1, 0);
-  }
 
   if (view2 != NULL)
-  {
     UnmapViewOfFileEx(view2, 0);
-  }
-
   return result;
+}
+
+void FreeRingBuffer(PRING_BUFFER pRingBuffer)
+{
+  if (pRingBuffer == NULL)
+    return;
+  if (pRingBuffer->pSecondaryView)
+    UnmapViewOfFile(pRingBuffer->pSecondaryView);
+  if (pRingBuffer->BaseBuffer)
+    UnmapViewOfFile(pRingBuffer->BaseBuffer);
+}
+
+// TODO
+BOOL UpdateBuffer(PRING_BUFFER pRingBuffer, HANDLE hRead)
+{
+  if (pRingBuffer == NULL || hRead == INVALID_HANDLE_VALUE)
+    return FALSE;
+
+  return TRUE;
 }
