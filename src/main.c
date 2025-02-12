@@ -1,42 +1,57 @@
+#include <string.h>
 #include <windows.h>
 #include <stdio.h>
 #include "create_process.h"
+#include "ring_buffer.h"
+
+void dumpBuffer(PVOID Buffer, SIZE_T size, SIZE_T displayBytes);
 
 int main()
 {
-  BOOL result;
-  DWORD BytesRead = 0;
-  CHAR buffer[1024];
-  OVERLAPPED ol = {};
+  RING_BUFFER RingBuffer = {};
+  CHAR WriteBuffer[256];
+  HANDLE hWrite, hRead;
 
-  HANDLE hStdinWrite, hStdoutRead, hProcess;
-  HPCON hPC;
-
-  SpawnChildProcess(L"C:\\windows\\system32\\cmd.exe", &hProcess, &hStdinWrite, &hStdoutRead, &hPC);
-
-  ol.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
-
-  PCHAR command = "dir\r\n";
-
-  result = WriteFile(hStdinWrite, command, strlen(command), NULL, &ol);
-
-  WaitForSingleObject(ol.hEvent, INFINITE);
-  GetOverlappedResult(hStdinWrite, &ol, &BytesRead, FALSE);
-
-  ResetEvent(ol.hEvent);
-
-  for (int i = 0; i < 2; i++)
+  for (int i = 0; i < 256; i++)
   {
-    ReadFile(hStdoutRead, buffer, sizeof(buffer), &BytesRead, &ol);
-    WaitForSingleObject(ol.hEvent, INFINITE);
-    GetOverlappedResult(hStdoutRead, &ol, &BytesRead, FALSE);
-    ResetEvent(ol.hEvent);
-    printf("%.*s -------->%d\n", (int)BytesRead, buffer, i);
+    WriteBuffer[i] = i;
   }
 
-  printf("\n------------ END -------------\n");
+  CreatePipe(&hRead, &hWrite, NULL, 0);
 
-  ClosePseudoConsole(hPC);
-  CloseHandle(ol.hEvent);
+  CreateRingBuffer(&RingBuffer, 64 KB);
+
+  for (int i = 0; i < 500; i++)
+  {
+    WriteFile(hWrite, WriteBuffer, 256, NULL, NULL);
+    UpdateRingBuffer(&RingBuffer, hRead);
+  }
+
+  PUCHAR ReadPtr = RINGBUF_READ_PTR(&RingBuffer); // Get the read pointer
+
+  dumpBuffer(ReadPtr, RingBuffer.BufferSize, 2 KB);
+
   return 0;
+}
+
+void dumpBuffer(PVOID Buffer, SIZE_T size, SIZE_T displayBytes)
+{
+  displayBytes /= 2;
+  for (SIZE_T i = 0; i < size; i++)
+  {
+    if (i == displayBytes)
+    {
+      i = size - displayBytes;
+      printf("\n");
+      for (int j = 0; j < 111; j++)
+        printf("+");
+    }
+    if (i % 32 == 0)
+    {
+      if (i > 0)
+        printf("\n");
+      printf("0x%08llx\t", i);
+    }
+    printf("%02X ", ((PUCHAR)Buffer)[i]);
+  }
 }
