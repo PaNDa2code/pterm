@@ -110,17 +110,35 @@ void FreeRingBuffer(PRING_BUFFER pRingBuffer)
 {
   if (pRingBuffer == NULL)
     return;
-  if (pRingBuffer->pSecondaryView)
-    UnmapViewOfFile(pRingBuffer->pSecondaryView);
-  if (pRingBuffer->BaseBuffer)
-    UnmapViewOfFile(pRingBuffer->BaseBuffer);
+  UnmapViewOfFile(pRingBuffer->BaseBuffer);
+  UnmapViewOfFile(pRingBuffer->BaseBuffer + pRingBuffer->BufferSize);
 }
 
-// TODO
-BOOL UpdateBuffer(PRING_BUFFER pRingBuffer, HANDLE hRead)
+BOOL UpdateRingBuffer(PRING_BUFFER pRingBuffer, HANDLE hRead)
 {
   if (pRingBuffer == NULL || hRead == INVALID_HANDLE_VALUE)
     return FALSE;
+
+  DWORD BytesRead;
+  BOOL result;
+  PVOID Buffer = pRingBuffer->BaseBuffer;
+  SIZE_T BufferSize = pRingBuffer->BufferSize;
+  SIZE_T WriteOffset = pRingBuffer->WriteOffset;
+
+  result = ReadFile(hRead, Buffer + WriteOffset, BufferSize, &BytesRead, NULL);
+
+  if (!result || BytesRead == 0)
+    return FALSE;
+
+  WriteOffset += BytesRead;
+
+  // Wrap WriteOffset and update ReadOffset
+  if (WriteOffset >= BufferSize) {
+    WriteOffset -= BufferSize;
+    pRingBuffer->ReadOffset = (WriteOffset + 1) & (BufferSize - 1);
+  }
+
+  pRingBuffer->WriteOffset = WriteOffset;
 
   return TRUE;
 }
