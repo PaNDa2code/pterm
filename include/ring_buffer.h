@@ -2,6 +2,10 @@
 
 #include <windows.h>
 
+#define KB *1024
+#define MB *(1024 KB)
+#define GB *(1024 MB)
+
 typedef struct _ring_buffer
 {
   PVOID BaseBuffer;
@@ -13,3 +17,5 @@ typedef struct _ring_buffer
 BOOL CreateRingBuffer(PRING_BUFFER pRingBuffer, SIZE_T Size);
 void FreeRingBuffer(PRING_BUFFER pRingBuffer);
 BOOL UpdateRingBuffer(PRING_BUFFER pRingBuffer, HANDLE hRead);
+
+#define RINGBUF_READ_PTR(pRingBuffer) ((pRingBuffer)->BaseBuffer + (pRingBuffer)->ReadOffset)

@@ -80,7 +80,6 @@ BOOL CreateRingBuffer(PRING_BUFFER pRingBuffer, SIZE_T Size)
 
   pRingBuffer->BaseBuffer = view1;
   pRingBuffer->BufferSize = Size;
-  pRingBuffer->pSecondaryView = view2;
 
   placeholder2 = NULL;
   view1 = NULL;
