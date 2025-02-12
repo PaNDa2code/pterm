@@ -17,3 +17,5 @@ typedef struct _ring_buffer
 } RING_BUFFER, *PRING_BUFFER;
 
 BOOL CreateRingBuffer(PRING_BUFFER pRingBuffer, SIZE_T Size);
+void FreeRingBuffer(PRING_BUFFER pRingBuffer);
+BOOL UpdateBuffer(PRING_BUFFER pRingBuffer, HANDLE hRead);
