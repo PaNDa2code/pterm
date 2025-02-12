@@ -24,7 +24,7 @@ int main()
   for (int i = 0; i < 500; i++)
   {
     WriteFile(hWrite, WriteBuffer, 256, NULL, NULL);
-    UpdateRingBuffer(&RingBuffer, hRead);
+    RingBufferHandleRead(&RingBuffer, hRead);
   }
 
   PUCHAR ReadPtr = RINGBUF_READ_PTR(&RingBuffer); // Get the read pointer

@@ -113,7 +113,7 @@ void FreeRingBuffer(PRING_BUFFER pRingBuffer)
   UnmapViewOfFile(pRingBuffer->BaseBuffer + pRingBuffer->BufferSize);
 }
 
-BOOL UpdateRingBuffer(PRING_BUFFER pRingBuffer, HANDLE hRead)
+BOOL RingBufferHandleRead(PRING_BUFFER pRingBuffer, HANDLE hRead)
 {
   if (pRingBuffer == NULL || hRead == INVALID_HANDLE_VALUE)
     return FALSE;
@@ -132,12 +132,28 @@ BOOL UpdateRingBuffer(PRING_BUFFER pRingBuffer, HANDLE hRead)
   WriteOffset += BytesRead;
 
   // Wrap WriteOffset and update ReadOffset
-  if (WriteOffset >= BufferSize) {
+  if (WriteOffset >= BufferSize)
+  {
     WriteOffset -= BufferSize;
     pRingBuffer->ReadOffset = (WriteOffset + 1) & (BufferSize - 1);
   }
 
   pRingBuffer->WriteOffset = WriteOffset;
 
+  return TRUE;
+}
+
+BOOL RingBufferWrite(PRING_BUFFER pRingBuffer, PVOID source, SIZE_T size)
+{
+  if (pRingBuffer->BufferSize > size)
+    return FALSE;
+  memcpy(pRingBuffer->BaseBuffer, source, size);
+  pRingBuffer->WriteOffset += size;
+
+  if (pRingBuffer->WriteOffset >= pRingBuffer->BufferSize)
+  {
+    pRingBuffer->WriteOffset -= pRingBuffer->BufferSize;
+    pRingBuffer->ReadOffset = pRingBuffer->WriteOffset + 1;
+  }
   return TRUE;
 }
