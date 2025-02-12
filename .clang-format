@@ -1,0 +1,11 @@
+BasedOnStyle: Microsoft
+SortIncludes: false
+BreakBeforeBinaryOperators: All
+BreakConstructorInitializers: BeforeComma
+PenaltyBreakBeforeFirstCallParameter: 1
+PenaltyBreakString: 0
+BinPackArguments: false
+AlignAfterOpenBracket: Align
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
