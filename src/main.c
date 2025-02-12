@@ -1,57 +1,79 @@
-#include <string.h>
-#include <windows.h>
+#define SDL_MAIN_HANDLED
+#include <SDL2/SDL.h>
 #include <stdio.h>
-#include "create_process.h"
-#include "ring_buffer.h"
+#include <stdbool.h>
 
-void dumpBuffer(PVOID Buffer, SIZE_T size, SIZE_T displayBytes);
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 
-int main()
+int main(int argc, char *argv[])
 {
-  RING_BUFFER RingBuffer = {};
-  CHAR WriteBuffer[256];
-  HANDLE hWrite, hRead;
-
-  for (int i = 0; i < 256; i++)
+  // Initialize SDL
+  if (SDL_Init(SDL_INIT_VIDEO) != 0)
   {
-    WriteBuffer[i] = i;
+    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+    return 1;
   }
 
-  CreatePipe(&hRead, &hWrite, NULL, 0);
-
-  CreateRingBuffer(&RingBuffer, 64 KB);
-
-  for (int i = 0; i < 500; i++)
+  // Create a window with the SDL_WINDOW_SHOWN flag
+  SDL_Window *window = SDL_CreateWindow("Simple SDL2 Window",
+                                        SDL_WINDOWPOS_CENTERED,
+                                        SDL_WINDOWPOS_CENTERED,
+                                        WINDOW_WIDTH,
+                                        WINDOW_HEIGHT,
+                                        SDL_WINDOW_SHOWN);
+  if (window == NULL)
   {
-    WriteFile(hWrite, WriteBuffer, 256, NULL, NULL);
-    RingBufferHandleRead(&RingBuffer, hRead);
+    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+    SDL_Quit();
+    return 1;
   }
 
-  PUCHAR ReadPtr = RINGBUF_READ_PTR(&RingBuffer); // Get the read pointer
+  // Create a renderer with hardware acceleration
+  SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  if (renderer == NULL)
+  {
+    printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return 1;
+  }
 
-  dumpBuffer(ReadPtr, RingBuffer.BufferSize, 2 KB);
+  // Main loop flag
+  bool quit = false;
+
+  // Event handler
+  SDL_Event event;
+
+  // Main loop
+  while (!quit)
+  {
+    // Handle events on the queue
+    while (SDL_PollEvent(&event))
+    {
+      if (event.type == SDL_QUIT)
+      {
+        quit = true;
+      }
+    }
+
+    // Clear the screen to black
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    // Draw a simple red rectangle to confirm rendering works
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_Rect rect = {100, 100, 200, 150};
+    SDL_RenderFillRect(renderer, &rect);
+
+    // Update the screen
+    SDL_RenderPresent(renderer);
+  }
+
+  // Clean up
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
 
   return 0;
-}
-
-void dumpBuffer(PVOID Buffer, SIZE_T size, SIZE_T displayBytes)
-{
-  displayBytes /= 2;
-  for (SIZE_T i = 0; i < size; i++)
-  {
-    if (i == displayBytes)
-    {
-      i = size - displayBytes;
-      printf("\n");
-      for (int j = 0; j < 111; j++)
-        printf("+");
-    }
-    if (i % 32 == 0)
-    {
-      if (i > 0)
-        printf("\n");
-      printf("0x%08llx\t", i);
-    }
-    printf("%02X ", ((PUCHAR)Buffer)[i]);
-  }
 }

@@ -1,6 +1,6 @@
 CC = gcc
 CF = -g -Iinclude -m64 $(VARS)
-LF = -lkernel32 -luser32 -lonecore
+LF = -lkernel32 -luser32 -lonecore $(shell sdl2-config --libs)
 
 SRC_DIR = src
 BIN_DIR = bin
@@ -8,7 +8,8 @@ OBJ_DIR = obj
 
 TEST_DIR = test
 
-VARS=-DNTDDI_VERSION=NTDDI_WIN10_RS5 -D_WIN32_WINNT=_WIN32_WINNT_WIN10
+VARS=-DNTDDI_VERSION=NTDDI_WIN10_RS5 \
+		 -D_WIN32_WINNT=_WIN32_WINNT_WIN10
 
 TARGET = $(BIN_DIR)\pterm.exe
 TEST_TARGET = $(BIN_DIR)\test.exe
@@ -58,6 +59,6 @@ $(TEST_TARGET): $(TEST_OBJECT_FILES) | $(BIN_DIR)
 	@$(CC) -o $@ $^ $(LF)
 
 clean:
-	del /q /f /s $(OBJ_DIR)\* $(TARGET) $(TEST_TARGET) .zig-cache zig-out
+	rm -rf $(OBJ_DIR)/* $(TARGET) $(TEST_TARGET) .zig-cache zig-out
 
 .PHONY: all test clean
