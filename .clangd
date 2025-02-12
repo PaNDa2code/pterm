@@ -1,2 +1,5 @@
 CompileFlags:
-  Add: ["-I../include"]
+  Compiler: clang-cl
+  Add:
+    - /I..\include
+    - /m64
