@@ -83,4 +83,24 @@ pub fn build(b: *std.Build) !void {
     const test_run = b.addRunArtifact(unit_test);
     const test_step = b.step("test", "run unit tests");
     test_step.dependOn(&test_run.step);
+
+    const DebugTargetEnum = enum { exe, tests };
+    const debug_target = b.option(DebugTargetEnum, "debug", "debuging target, only used with dbg step") orelse DebugTargetEnum.exe;
+
+    const dbg_step = b.step("dbg", "run windbg on target exe or unit tests");
+
+    const windbg_command = b.addSystemCommand(&.{"windbgx"});
+
+    switch (debug_target) {
+        .exe => {
+            windbg_command.addFileArg(exe.getEmittedBin());
+            windbg_command.step.dependOn(&exe.step);
+        },
+        .tests => {
+            windbg_command.addFileArg(unit_test.getEmittedBin());
+            windbg_command.step.dependOn(&unit_test.step);
+        },
+    }
+
+    dbg_step.dependOn(&windbg_command.step);
 }
