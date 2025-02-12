@@ -38,4 +38,10 @@ pub fn build(b: *std.Build) void {
     exe.linkSystemLibrary("onecore");
 
     b.installArtifact(exe);
+
+    const exe_run = b.addRunArtifact(exe);
+
+    const run_step = b.step("run", "run pterm executable");
+
+    run_step.dependOn(&exe_run.step);
 }
