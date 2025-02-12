@@ -6,7 +6,10 @@ pub fn build(b: *std.Build) void {
     });
 
     const target = b.standardTargetOptions(.{
-        .default_target = .{ .abi = .msvc },
+        .default_target = .{
+            .os_tag = .windows,
+            .abi = .msvc,
+        },
     });
 
     const exe = b.addExecutable(.{

@@ -1,3 +1,2 @@
 CompileFlags:
-  Compiler: gcc
   Add: ["-I../include"]

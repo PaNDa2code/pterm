@@ -1,10 +1,12 @@
 CC = gcc
-CF = -g -Iinclude -m64
+CF = -g -Iinclude -m64 $(VARS)
 LF = -lkernel32 -luser32 -lonecore
 
 SRC_DIR = src
 BIN_DIR = bin
 OBJ_DIR = obj
+
+VARS=-DNTDDI_VERSION=NTDDI_WIN10_RS5 -D_WIN32_WINNT=_WIN32_WINNT_WIN10
 
 TARGET = $(BIN_DIR)\pterm.exe
 
