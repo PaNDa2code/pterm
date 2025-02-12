@@ -8,7 +8,7 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{
         .default_target = .{
             .os_tag = .windows,
-            .abi = .msvc,
+            .abi = .gnu,
         },
     });
 
@@ -36,7 +36,11 @@ pub fn build(b: *std.Build) !void {
     // Link libraries
     pterm_lib.linkSystemLibrary("kernel32");
     pterm_lib.linkSystemLibrary("user32");
-    pterm_lib.linkSystemLibrary("onecore");
+
+    const sdl_deb = b.dependency("SDL", .{
+        .optimize = optimize,
+        .target = target,
+    });
 
     // Executable
     const exe = b.addExecutable(.{
@@ -47,10 +51,14 @@ pub fn build(b: *std.Build) !void {
 
     // Add the main c file
     exe.addCSourceFile(.{ .file = main_path });
+    // Add import lib
+    exe.addObjectFile(b.path("defs/libkernelbase_import.a"));
     // Add include directory
     exe.addIncludePath(include_path);
     // Link aginst the static library
     exe.linkLibrary(pterm_lib);
+    // Link SDL
+    exe.linkLibrary(sdl_deb.artifact("SDL2"));
     // Set as default build
     b.installArtifact(exe);
 
@@ -73,6 +81,7 @@ pub fn build(b: *std.Build) !void {
     });
 
     unit_test.addIncludePath(include_path);
+    unit_test.addObjectFile(b.path("defs/libkernelbase_import.a"));
 
     if (target.result.abi == .msvc) {
         // MSVC POSIX runtime library for windows
