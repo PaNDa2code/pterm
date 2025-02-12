@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn build(b: *std.Build) void {
+pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{
         .preferred_optimize_mode = .ReleaseFast,
     });
@@ -12,31 +12,49 @@ pub fn build(b: *std.Build) void {
         },
     });
 
-    const exe = b.addExecutable(.{
+    const src_path = b.path("src");
+    const include_path = b.path("include");
+    const main_path = try src_path.join(b.allocator, "main.c");
+
+    const pterm_lib = b.addStaticLibrary(.{
         .name = "pterm",
         .target = target,
         .optimize = optimize,
         .link_libc = true,
-        .linkage = .static,
     });
 
+    pterm_lib.linkSystemLibrary("kernel32");
+    pterm_lib.linkSystemLibrary("user32");
+    pterm_lib.linkSystemLibrary("onecore");
     // Include directory
-    exe.addIncludePath(b.path("include/"));
-
-    exe.addCSourceFiles(.{
+    pterm_lib.addIncludePath(include_path);
+    // C source files
+    pterm_lib.addCSourceFiles(.{
         .files = &.{
-            "main.c",
             "create_process.c",
             "ring_buffer.c",
         },
-        .root = b.path("src/"),
+        .root = src_path,
+    });
+    // Link libraries
+    pterm_lib.linkSystemLibrary("kernel32");
+    pterm_lib.linkSystemLibrary("user32");
+    pterm_lib.linkSystemLibrary("onecore");
+
+    // Executable
+    const exe = b.addExecutable(.{
+        .name = "pterm",
+        .target = target,
+        .optimize = optimize,
     });
 
-    // Link libraries
-    exe.linkSystemLibrary("kernel32");
-    exe.linkSystemLibrary("user32");
-    exe.linkSystemLibrary("onecore");
-
+    // Add the main c file
+    exe.addCSourceFile(.{ .file = main_path });
+    // Add include directory
+    exe.addIncludePath(include_path);
+    // Link aginst the static library
+    exe.linkLibrary(pterm_lib);
+    // Set as default build
     b.installArtifact(exe);
 
     const exe_run = b.addRunArtifact(exe);
