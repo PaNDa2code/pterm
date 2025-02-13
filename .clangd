@@ -1,5 +1,5 @@
 CompileFlags:
-  Compiler: clang-cl
+  Compiler: gcc
   Add:
-    - /I..\include
-    - /m64
+    - -I..\include
+    - -m64

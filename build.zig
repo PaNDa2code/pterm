@@ -37,6 +37,8 @@ pub fn build(b: *std.Build) !void {
     pterm_lib.linkSystemLibrary("kernel32");
     pterm_lib.linkSystemLibrary("user32");
     pterm_lib.linkSystemLibrary("onecore");
+    pterm_lib.linkSystemLibrary("gdi32");
+    pterm_lib.linkSystemLibrary("dwmapi");
 
     // Executable
     const exe = b.addExecutable(.{

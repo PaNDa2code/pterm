@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <windows.h>
 
 #define KB *1024
@@ -17,3 +21,7 @@ void FreeRingBuffer(PRING_BUFFER pRingBuffer);
 BOOL RingBufferHandleRead(PRING_BUFFER pRingBuffer, HANDLE hRead);
 
 #define RINGBUF_READ_PTR(pRingBuffer) ((pRingBuffer)->BaseBuffer + (pRingBuffer)->ReadOffset)
+
+#ifdef __cplusplus
+}
+#endif
